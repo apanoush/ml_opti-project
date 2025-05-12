@@ -1,6 +1,8 @@
 - How well do zero-order optimization methods do for ML applications, compared to standard first-order
-    - comparison for simple and more complex algorithms (GD and other variants?) for simple or complex problems (different dimensions)
+    - comparison for simple and more complex algorithms (GD and other variants, binary search?) for simple or complex problems (different dimensions: https://openreview.net/forum?id=Skep6TVYDB)
     - analysis of convergence and performance (number of steps)
+    - applications in ML and Signal Proc: https://arxiv.org/pdf/2006.06224
+    - other related paper: https://openreview.net/forum?id=n1bLgxHW6jW
 - Meta-Learning: Can you learn the learning rate? The importance of each datapoint? The direction or
 curvature?
 1) Effect of gradient clipping on optimization:
