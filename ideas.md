@@ -4,12 +4,17 @@
     - applications in ML and Signal Proc: https://arxiv.org/pdf/2006.06224
     - other related paper: https://openreview.net/forum?id=n1bLgxHW6jW
 - Meta-Learning: Can you learn the learning rate? The importance of each datapoint? The direction or
-curvature?
-1) Effect of gradient clipping on optimization:
-   - Does gradient clipping help finding good local minima? 
-   - How sensitive are different optimizers to gradient clipping?
-   - Is there a relation between the model size and the performance of gradient clipping?
-2) Impact of Activation Functions
+curvature? 
+
+- Effect of gradient clipping on optimization:
+    Theory behind it: https://arxiv.org/pdf/1905.11881, https://arxiv.org/pdf/2305.01588 (EPFL, more complicated)
+   - Main idea: can we improve the convergence behaviour of some algorithms that require gradient clipping (like SGD for RNN) by predicting the future gradients. For example gradients could be increasing while still not exploding, so we do not want to clip them in this case.
+     Potential paper: https://arxiv.org/pdf/2504.02507, but does not seem to really predict the future gradients.
+   - Other ideas, more general:
+     - Does gradient clipping help finding good local minima?
+     - How sensitive are different optimizers to gradient clipping?
+     - Is there a relation between the model size and the performance of gradient clipping?
+- Impact of Activation Functions
     - KAN: Kolmogorov-Arnold Networks: "promising alternatives to Multi-Layer Perceptrons (MLPs). While MLPs have fixed activation functions on nodes (“neurons”), KANs have learnable activation functions on edges (“weights”)"
         - https://arxiv.org/abs/2404.19756v1
     - https://arxiv.org/abs/2407.16674v1
