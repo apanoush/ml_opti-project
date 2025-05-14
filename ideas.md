@@ -4,7 +4,15 @@
     - applications in ML and Signal Proc: https://arxiv.org/pdf/2006.06224
     - other related paper: https://openreview.net/forum?id=n1bLgxHW6jW
 - Meta-Learning: Can you learn the learning rate? The importance of each datapoint? The direction or
-curvature? 
+curvature?
+
+Learned optimizers: 
+Good summary: "Classic optimization methods are built upon components that are basic methods — such as gradient descent, conjugate gradient, Newton steps, Simplex basis update, and stochastic sampling — in a theoretically justified manner. Most conventional optimization methods can be written in a few lines, and their performance is guaranteed by their theories.""L2O is an alternative paradigm that develops an optimization method by training, i.e., learning from its performance on sample problems. The method may lack a solid theoretical basis but improves its performance during the training process."
+Key idea : instead of writing the optimizers as a classic function replace it (or part of of it) by a neural network that can be learned on sample tasks.
+Compared its performance on unseen task compared to classical methods such as SGD or ADAM.
+Difficulty of generalization on different tasks, thus better to choose a specific type of task.
+papers experimenting : https://arxiv.org/pdf/2312.07174, https://arxiv.org/pdf/2103.12828, https://arxiv.org/pdf/2405.18222
+Need to find : case study 
 
 - Effect of gradient clipping on optimization:
     Theory behind it: https://arxiv.org/pdf/1905.11881, https://arxiv.org/pdf/2305.01588 (EPFL, more complicated)
