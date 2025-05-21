@@ -16,6 +16,9 @@
                 - SPSA: perturb all parameters at once with a random vector to estimate gradients efficiently 
                     - https://www.jhuapl.edu/SPSA/Pages/
                     - https://github.com/anomic1911/SPSA-Net
+                    - https://docs.quantum.ibm.com/api/qiskit/0.25/qiskit.algorithms.optimizers.SPSA
+                    - https://pennylane.ai/qml/demos/tutorial_spsa
+                    - https://en.wikipedia.org/wiki/Simultaneous_perturbation_stochastic_approximation
 - Meta-Learning: Can you learn the learning rate? The importance of each datapoint? The direction or
 curvature?
 
