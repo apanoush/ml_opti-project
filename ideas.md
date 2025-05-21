@@ -8,8 +8,14 @@
         - linear regression with 2 parameters: fit $y=w\cdot x + b$ to synthetic data
             - GB: MSE, ZOO: coordinate descent
         - kmeans as an optimization problem:
-            - GB: probabilistic clustering, soft assignment formula (fuzzy clustering: derivable) ([source](https://en.wikipedia.org/wiki/Fuzzy_clustering)): $$\sum_{i=1}^{n} \sum_{j=1}^{c} w_{ij}^m \left\|\mathbf{x}_i - \mathbf{c}_j \right\|^2$$ 
+            - GB: probabilistic clustering, soft assignment formula (fuzzy clustering: derivable) ([source](https://en.wikipedia.org/wiki/Fuzzy_clustering)): $\sum_{i=1}^{n} \sum_{j=1}^{c} w_{ij}^m \left\|\mathbf{x}_i - \mathbf{c}_j \right\|^2$ 
             - ZO: coordinate descent (bad?) or random search (pertubrs on centroid randomly and accepts if loss descreases)
+        - Neural Network for MNIST Digit Classification
+            - GB: classical backpropagation
+            - ZO: Perturb each parameter slightly and approximate gradients
+                - SPSA: perturb all parameters at once with a random vector to estimate gradients efficiently 
+                    - https://www.jhuapl.edu/SPSA/Pages/
+                    - https://github.com/anomic1911/SPSA-Net
 - Meta-Learning: Can you learn the learning rate? The importance of each datapoint? The direction or
 curvature?
 
