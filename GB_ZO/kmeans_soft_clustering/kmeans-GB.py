@@ -3,18 +3,15 @@ import numpy as np
 from sklearn.datasets import make_blobs
 import sys
 sys.path.insert(0, ".")
-from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment
+from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment, generate_data
 from GB_ZO.utils import compute_loss_and_plot
 from tqdm import tqdm
 
-epochs = 1000
+epochs = 5000
 
-# Generate synthetic data
-X, y = make_blobs(n_samples=300, centers=3, cluster_std=1.0, random_state=42)
+X, y, n_samples, n_features, c , m = generate_data()
+
 X = torch.tensor(X, dtype=torch.float32)
-n_samples, n_features = X.shape
-c = 3  # Number of clusters
-m = 2  # Fuzziness parameter
 
 # Initialize cluster centers (better initialization)
 C = torch.randn(c, n_features).requires_grad_(True)

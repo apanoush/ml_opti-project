@@ -261,6 +261,7 @@ def minimize(
     momentum: float = DEFAULTS.momentum,
     beta: float = DEFAULTS.beta,
     epsilon: float = DEFAULTS.epsilon,
+    silent: bool = False
 ) -> np.ndarray:
     """
     Implementation of the SPSA optimization algorithm for minimizing an objective function.
@@ -522,7 +523,7 @@ def minimize(
     if adam:
         dx /= np.sqrt(square_gx / b2 + epsilon)
     # Run the number of iterations.
-    for i in tqdm(range(iterations), desc="Minmizing the function", total=iterations):
+    for i in tqdm(range(iterations), desc="Minmizing the function", total=iterations, disable=silent):
         # Estimate the next point.
         x_next = x - lr * dx
         # Compute df/dx in at the next point.

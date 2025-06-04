@@ -1,16 +1,11 @@
 import numpy as np
-from sklearn.datasets import make_blobs
 import sys
 sys.path.insert(0, ".")
-from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment
+from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment, generate_data
 from GB_ZO.utils import compute_loss_and_plot
 import GB_ZO.spsa as spsa
 
-# Generate synthetic data
-X, y = make_blobs(n_samples=300, centers=3, cluster_std=1.0, random_state=42)
-n_samples, n_features = X.shape
-c = 3  # Number of clusters
-m = 2  # Fuzziness parameter
+X, y, n_samples, n_features, c , m = generate_data()
 
 def compute_membership_matrix(X, C, m):
     """Compute membership matrix using fuzzy c-means formula"""

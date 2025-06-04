@@ -25,4 +25,5 @@ def compute_loss_and_plot(x_history, loss_function, X_train=None, y_train=None, 
             loss_history[i] = loss_function(xh, X_train, y_train)
         else:
             loss_history[i] = loss_function(xh)
+    print(f"Final loss: {loss_history[-1]}")
     plot_loss_history(loss_history)
