@@ -15,7 +15,7 @@ def plot_loss_history(loss_history):
 
 def compute_loss_and_plot(x_history, loss_function, X_train=None, y_train=None, batch_size = None):
     # Plot the loss history
-    num_iterations = x_history.shape[0]
+    num_iterations = np.shape(x_history)[0]
     loss_history = np.zeros(num_iterations)
     for i, xh in tqdm(enumerate(x_history), desc="Computing the loss", unit="x", total=num_iterations):
         if batch_size and X_train and y_train:

@@ -7,6 +7,7 @@ import sys
 sys.path.insert(0, ".")
 from GB_ZO.utils import compute_loss_and_plot
 import GB_ZO.spsa as spsa
+from GB_ZO.algorithms import *
 
 num_iterations = 2000
 
@@ -71,12 +72,15 @@ def train_spsa_with_library(X_train, y_train, num_iterations=num_iterations, bat
         loss_history.append(loss)
         return loss
 
-    # Initialize SPSA optimizer
-    (result, x_history) = spsa.minimize(objective, theta,
+    # # Initialize SPSA optimizer
+    # (result, x_history) = spsa.minimize(objective, theta,
     
-        iterations=num_iterations,
-        epsilon=1e-8,     # Tolerance for convergence
-    )
+    #     iterations=num_iterations,
+    #     epsilon=1e-8,     # Tolerance for convergence
+    # )
+    result, x_history = gradient_descent(
+        theta, 0.01, 
+        lambda x: spsa_gradient(x, objective, 0.01))
 
     # Run optimization
     #result = optimizer.minimize()

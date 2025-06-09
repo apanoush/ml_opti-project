@@ -1,5 +1,5 @@
 import numpy as np
-
+from tqdm import tqdm
 
 def multipoint_gradient_estimator(x: np.ndarray, function, K: float, random_K_amplificator: bool=False) -> np.ndarray:
     """Multipoint gradient estimator using orthogonal perturbations."""
@@ -63,3 +63,24 @@ def spsa_gradient(x: np.ndarray, function, K: float):
 
     # Gradient estimate
     return delta * (f_plus - f_minus) / (2 * K)
+
+
+def gradient_descent(initial_point, learning_rate, gradient_function, max_iterations=1000, tolerance=1e-6):
+    """Performs gradient descent optimization"""
+    
+    x = initial_point.copy()
+    x_history = [x.copy()]
+    
+    for i in tqdm(range(max_iterations), desc="Performing gradient descent", unit="iteration", total=max_iterations):
+        grad = gradient_function(x)
+        
+        # Check for convergence
+        if np.linalg.norm(grad) < tolerance:
+            break
+            
+        # Update parameters
+        x = x - learning_rate * grad
+        x_history.append(x.copy())
+    
+    return x, x_history
+

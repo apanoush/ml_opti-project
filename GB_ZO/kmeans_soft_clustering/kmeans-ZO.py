@@ -4,6 +4,20 @@ sys.path.insert(0, ".")
 from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment, generate_data
 from GB_ZO.utils import compute_loss_and_plot
 import GB_ZO.spsa as spsa
+from GB_ZO.algorithms import *
+
+MAX_ITERATIONS = 5000
+LR = 3e-3
+METHOD = ["spsa", "multi-point"][-1]
+
+FUNCTION = {
+    "spsa": lambda x: spsa_gradient(
+        x, objective, LR
+    ),
+    "multi-point": lambda x: multipoint_gradient_estimator(
+        x, objective, LR
+    )
+}[METHOD]
 
 X, y, n_samples, n_features, c , m = generate_data()
 
@@ -51,16 +65,23 @@ def objective(theta):
     
     return loss
 
-# Run SPSA optimization with better parameters
-theta_opt, x_history = spsa.minimize(
-    objective,
-    init_theta(),
-    iterations=500,
-    lr=0.1,           # Step size scaling 
-    px=0.1,           # Perturbation scaling
-    lr_decay=0.602,     # Step size decay
-    px_decay=0.101,     # Perturbation decay
-) # A=50,            # Stability constant 
+# # Run SPSA optimization with better parameters
+# theta_opt, x_history = spsa.minimize(
+#     objective,
+#     init_theta(),
+#     iterations=500,
+#     lr=0.1,           # Step size scaling 
+#     px=0.1,           # Perturbation scaling
+#     lr_decay=0.602,     # Step size decay
+#     px_decay=0.101,     # Perturbation decay
+# ) # A=50,            # Stability constant 
+
+theta_opt, x_history = gradient_descent(
+    init_theta(), learning_rate=LR,
+    max_iterations=MAX_ITERATIONS,
+    gradient_function= FUNCTION,
+    tolerance=1e-10
+)
 
 # Extract optimized parameters
 C_opt = theta_opt.reshape(c, n_features)
