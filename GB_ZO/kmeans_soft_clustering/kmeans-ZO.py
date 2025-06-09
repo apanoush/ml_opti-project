@@ -2,13 +2,15 @@ import numpy as np
 import sys
 sys.path.insert(0, ".")
 from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment, generate_data
-from GB_ZO.utils import compute_loss_and_plot
+from GB_ZO.utils import compute_loss, plot_loss_history, output_result
 import GB_ZO.spsa as spsa
 from GB_ZO.algorithms import *
 
 MAX_ITERATIONS = 5000
-LR = 3e-3
-METHOD = ["spsa", "multi-point"][-1]
+LR = [3e-3, 1e-5][-1]
+METHOD = ["spsa", "multi-point"][0]
+ONLY_RESULTS = True
+OUTPUT = f"GB_ZO/kmeans_soft_clustering/results/{METHOD}.pkl"
 
 FUNCTION = {
     "spsa": lambda x: spsa_gradient(
@@ -20,6 +22,43 @@ FUNCTION = {
 }[METHOD]
 
 X, y, n_samples, n_features, c , m = generate_data()
+    
+
+def main():
+    initial_x = init_theta()
+
+    print(f"Problem shape is {np.shape(initial_x)}")
+
+    theta_opt, x_history = gradient_descent(
+        initial_x, learning_rate=LR,
+        max_iterations=MAX_ITERATIONS,
+        gradient_function= FUNCTION,
+        tolerance=1e-20
+    )
+
+    # Extract optimized parameters
+    C_opt = theta_opt.reshape(c, n_features)
+    W_opt = compute_membership_matrix(X, C_opt, m)
+
+    print("Final cluster centers:")
+    print(C_opt)
+    print(f"Final objective value: {objective(theta_opt):.4f}")
+
+    if n_features == 2:
+        plot_assignment(X, C_opt, W_opt)
+
+    loss_history = compute_loss(x_history, objective)
+    if not ONLY_RESULTS: plot_loss_history(loss_history)
+    additional_info = {
+        "n_samples": n_samples,
+        "n_features": n_features,
+        "n_clusters": c,
+        "method": METHOD,
+        "lr": LR,
+        "max_iterations": MAX_ITERATIONS
+    }
+    output_result(theta_opt, x_history, loss_history, OUTPUT, additional_info)
+
 
 def compute_membership_matrix(X, C, m):
     """Compute membership matrix using fuzzy c-means formula"""
@@ -76,20 +115,5 @@ def objective(theta):
 #     px_decay=0.101,     # Perturbation decay
 # ) # A=50,            # Stability constant 
 
-theta_opt, x_history = gradient_descent(
-    init_theta(), learning_rate=LR,
-    max_iterations=MAX_ITERATIONS,
-    gradient_function= FUNCTION,
-    tolerance=1e-10
-)
-
-# Extract optimized parameters
-C_opt = theta_opt.reshape(c, n_features)
-W_opt = compute_membership_matrix(X, C_opt, m)
-
-print("Final cluster centers:")
-print(C_opt)
-print(f"Final objective value: {objective(theta_opt):.4f}")
-
-plot_assignment(X, C_opt, W_opt)
-compute_loss_and_plot(x_history, objective)
+if __name__ == "__main__":
+    main()

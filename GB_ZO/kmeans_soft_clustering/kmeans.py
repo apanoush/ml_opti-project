@@ -1,7 +1,9 @@
 import numpy as np
 from sklearn.datasets import make_blobs
 
-N_CENTERS = [3, 5, 10][-1]
+N_FEATURES = [2, 5][-1]
+N_CENTERS = [3, 5, 10][0]
+STD = [2., 5.][-1]
 
 def plot_assignment(X, C_opt, W_opt):
     import matplotlib.pyplot as plt
@@ -23,7 +25,7 @@ def plot_assignment(X, C_opt, W_opt):
 def generate_data(n_centers=N_CENTERS):
     # Generate synthetic data
     print(f"Creating {n_centers} blobs")
-    X, y = make_blobs(n_samples=300, centers=n_centers, cluster_std=2., random_state=42, n_features=2)
+    X, y = make_blobs(n_samples=300, centers=n_centers, cluster_std=STD, random_state=42, n_features=N_FEATURES)
     n_samples, n_features = X.shape
     c = n_centers  # Number of clusters
     m = 2  # Fuzziness parameter
