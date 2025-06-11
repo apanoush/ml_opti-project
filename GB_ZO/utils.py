@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-import pickle
+import json
 
 def output_result(final_x, x_history, loss_history, output_path, additional_info:dict = None):
     results = {
@@ -12,7 +12,7 @@ def output_result(final_x, x_history, loss_history, output_path, additional_info
     if additional_info and isinstance(additional_info, dict):
         results.update(additional_info)
 
-    pickle.dump(results, open(output_path, "wb"))
+    json.dump(results, open(output_path, "w"), indent=4)
 
 def plot_loss_history(loss_history):
     """Plots the training loss over iterations."""

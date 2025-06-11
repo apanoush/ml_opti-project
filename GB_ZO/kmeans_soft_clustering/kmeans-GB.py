@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 epochs = 5000
 
-X, y, n_samples, n_features, c , m = generate_data()
+X, y, n_samples, n_features, c , m, _ = generate_data()
 
 X = torch.tensor(X, dtype=torch.float32)
 
