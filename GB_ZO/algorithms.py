@@ -69,9 +69,10 @@ def gradient_descent(initial_point, learning_rate, gradient_function, max_iterat
     """Performs gradient descent optimization"""
     
     x = initial_point.copy()
-    x_history = [x.copy()]
+    x_history = np.zeros((max_iterations+1, *x.shape))
+    x_history[0] = x
     
-    for i in tqdm(range(max_iterations), desc="Performing gradient descent", unit="iteration", total=max_iterations):
+    for i in tqdm(range(1, max_iterations+1), desc="Performing gradient descent", unit="iteration", total=max_iterations):
         grad = gradient_function(x)
         
         # Check for convergence
@@ -80,7 +81,7 @@ def gradient_descent(initial_point, learning_rate, gradient_function, max_iterat
             
         # Update parameters
         x = x - learning_rate * grad
-        x_history.append(x.copy())
+        x_history[i] = x
     
     return x, x_history
 

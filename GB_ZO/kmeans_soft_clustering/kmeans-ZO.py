@@ -3,14 +3,12 @@ import sys
 sys.path.insert(0, ".")
 from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment, generate_data
 from GB_ZO.utils import compute_loss, plot_loss_history, output_result
-import GB_ZO.spsa as spsa
 from GB_ZO.algorithms import *
 
-MAX_ITERATIONS = 5000
-LR = [3e-3, 1e-5][-1]
+MAX_ITERATIONS = 10000
+LR = [3e-3, 1e-5, 1e-3][-1]
 METHOD = ["spsa", "multi-point"][0]
-ONLY_RESULTS = True
-OUTPUT = f"GB_ZO/kmeans_soft_clustering/results/{METHOD}.pkl"
+ONLY_RESULTS = False
 
 FUNCTION = {
     "spsa": lambda x: spsa_gradient(
@@ -21,7 +19,10 @@ FUNCTION = {
     )
 }[METHOD]
 
-X, y, n_samples, n_features, c , m = generate_data()
+X, y, n_samples, n_features, c , m, sparse_dims = generate_data()
+
+OUTPUT = f"GB_ZO/kmeans_soft_clustering/results/{METHOD}_{n_features}D.json"
+OUTPUT_PLOT = f"GB_ZO/kmeans_soft_clustering/results/clusters2D.pdf" if METHOD == "spsa" else None
     
 
 def main():
@@ -45,7 +46,7 @@ def main():
     print(f"Final objective value: {objective(theta_opt):.4f}")
 
     if n_features == 2:
-        plot_assignment(X, C_opt, W_opt)
+        plot_assignment(X, C_opt, W_opt, output_path = OUTPUT_PLOT)
 
     loss_history = compute_loss(x_history, objective)
     if not ONLY_RESULTS: plot_loss_history(loss_history)
@@ -55,9 +56,10 @@ def main():
         "n_clusters": c,
         "method": METHOD,
         "lr": LR,
-        "max_iterations": MAX_ITERATIONS
+        "max_iterations": MAX_ITERATIONS,
+        "sparse_dims": sparse_dims
     }
-    output_result(theta_opt, x_history, loss_history, OUTPUT, additional_info)
+    output_result(theta_opt.tolist(), x_history.tolist(), loss_history.tolist(), OUTPUT, additional_info)
 
 
 def compute_membership_matrix(X, C, m):
@@ -91,7 +93,7 @@ def init_theta():
 # Objective function for SPSA - only optimize cluster centers
 def objective(theta):
     # Reshape to cluster centers
-    C = theta.reshape(c, n_features)
+    C = np.reshape(theta, (c, n_features))
     
     # Compute membership matrix from current centers
     W = compute_membership_matrix(X, C, m)
