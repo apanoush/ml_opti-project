@@ -1,11 +1,12 @@
 import numpy as np
 from tqdm import tqdm
 
-def multipoint_gradient_estimator(x: np.ndarray, function, K: float, random_K_amplificator: bool=False) -> np.ndarray:
+
+def multipoint_gradient_estimator(x: np.ndarray, function, K: float, random_K_amplificator: bool = False) -> np.ndarray:
     """Multipoint gradient estimator using orthogonal perturbations."""
 
-    M = 3/2  # Amplification range
-    random_K_amplificator = np.random.uniform(1/M, M) if random_K_amplificator else 1
+    M = 3 / 2  # Amplification range
+    random_K_amplificator = np.random.uniform(1 / M, M) if random_K_amplificator else 1
 
     dimension = x.shape[0]
 
@@ -45,6 +46,7 @@ def multipoint_gradient_estimator(x: np.ndarray, function, K: float, random_K_am
     grad = np.mean(zero_order_estimations, axis=0)
     return grad
 
+
 def spsa_gradient(x: np.ndarray, function, K: float):
     """Simultaneous Perturbation Stochastic Approximation gradient"""
 
@@ -67,21 +69,21 @@ def spsa_gradient(x: np.ndarray, function, K: float):
 
 def gradient_descent(initial_point, learning_rate, gradient_function, max_iterations=1000, tolerance=1e-6):
     """Performs gradient descent optimization"""
-    
+
     x = initial_point.copy()
-    x_history = np.zeros((max_iterations+1, *x.shape))
+    x_history = np.zeros((max_iterations + 1, *x.shape))
     x_history[0] = x
-    
-    for i in tqdm(range(1, max_iterations+1), desc="Performing gradient descent", unit="iteration", total=max_iterations):
+
+    for i in tqdm(range(1, max_iterations + 1), desc="Performing gradient descent", unit="iteration",
+                  total=max_iterations):
         grad = gradient_function(x)
-        
+
         # Check for convergence
         if np.linalg.norm(grad) < tolerance:
             break
-            
+
         # Update parameters
         x = x - learning_rate * grad
         x_history[i] = x
-    
-    return x, x_history
 
+    return x, x_history
