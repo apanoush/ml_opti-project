@@ -1,6 +1,8 @@
 import gymnasium as gym
 import numpy as np
 from tqdm.notebook import tqdm
+import matplotlib.pyplot as plt
+from GB_ZO.utils import compute_moving_avg
 
 
 # Note: D=51 => very slow with Multipoint Gradient Estimator, but fast with SPSA.
@@ -8,6 +10,7 @@ class MLPPolicy:
     """
     Simple MLP to predict the action to take based on the current state of the car.
     """
+
     def __init__(self, input_dim=2, hidden_dim=8, output_dim=3):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
@@ -70,8 +73,8 @@ def compute_step_reward(obs, goal_position):
     # We give a large reward when the car reaches the goal.
     reward = (
             100 * (position >= goal_position) +
-            5 * abs(velocity) +                   # [0, 0.35]
-            0.2 * (np.sin(3 * position) + 1) -    # [0, 0.4]
+            5 * abs(velocity) +  # [0, 0.35]
+            0.2 * (np.sin(3 * position) + 1) -  # [0, 0.4]
             1
     )
     return reward
@@ -105,10 +108,11 @@ def evaluate_policy(env, policy, n_episodes=5):
     return total_reward / n_episodes
 
 
-def train(gradient_function, iterations=10000, alpha_init=0.5, K_init=5.0, alpha_decay=0.01, K_decay=0.01, hidden_dim=8):
+def train(gradient_function, iterations=10000, alpha_init=0.5, K_init=5.0, alpha_decay=0.05, K_decay=0.0,
+          hidden_dim=8):
     """
     Trains a MLPPolicy to solve the MountainCar RL problem with a zeroth-order gradient approximation function.
-    :param gradient_function: gradient estimation function (SPSA or Multipoint Gradient Estimator).
+    :param gradient_function: gradient estimation function (SPSA or MPGE).
     :param iterations: number of training iterations.
     :param alpha_init: initial learning rate
     :param K_init: initial perturbations magnitude for the gradient estimation.
@@ -170,6 +174,56 @@ def train(gradient_function, iterations=10000, alpha_init=0.5, K_init=5.0, alpha
 
     env.close()
     return reward_history, best_params
+
+
+def grid_search(iterations, gradient_fn, alpha_list, K_list):
+    """
+    Performs a grid search on the parameters alpha and K.
+    :param iterations: number of training iterations for each combination.
+    :param gradient_fn: function used to estimate the gradient (SPSA or MPGE)
+    :param alpha_list: list of values for the paramater alpha.
+    :param K_list: list of values for the parameter K.
+    :return: dict containing the history of rewards indexed by (alpha, K), dict containing the best policy parameters
+    indexed by (alpha, K).
+    """
+    histories = {}
+    best_params = {}
+
+    print("--- GRID SEARCH ---")
+    for alpha in alpha_list:
+        for K in K_list:
+            print("--------------------------------------------")
+            print(f"\n### Training for alpha={alpha}, K={K} ###")
+            history, params = train(gradient_fn, iterations=iterations, alpha_init=alpha, K_init=K)
+            histories[(alpha, K)] = history
+            best_params[(alpha, K)] = params
+            print("\n")
+
+    return histories, best_params
+
+
+def plot_grid_search(histories, graph_title, window_size=100):
+    """
+    Plot the rewards histories obtained by grid search
+    :param histories: dict indexed by (alpha, K) containing the history of the rewards obtained during training.
+    :param graph_title: name of the graph.
+    :param window_size: moving average window size.
+    """
+    # Smoothen the curves
+    histories_ma = {}
+    for ((alpha, K), history) in histories.items():
+        histories_ma[(alpha, K)] = compute_moving_avg(history, window_size)
+
+    # Plotting
+    plt.figure(figsize=(10, 6))
+    for ((alpha, K), history_ma) in histories_ma.items():
+        plt.plot(history_ma, label=f'alpha={alpha}, K={K}')
+    plt.xlabel('Steps')
+    plt.ylabel('Mean total reward over 5 episodes')
+    plt.title(graph_title)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 def visualize_policy(params, hidden_dim=8):
