@@ -1,11 +1,11 @@
 import gymnasium as gym
 import numpy as np
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 
 
 # Note: D=99 => very slow with multi, fast with SPSA
 class MLPPolicy:
-    def __init__(self, input_dim=2, hidden_dim=16, output_dim=3):
+    def __init__(self, input_dim=2, hidden_dim=8, output_dim=3):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
@@ -45,8 +45,8 @@ def compute_step_reward(obs, goal_position):
     velocity = obs[1]
     reward = (
             100 * (position >= goal_position) +
-            5 * abs(velocity) +
-            (np.sin(3 * position) + 1) / 3 -
+            5 * abs(velocity) +                   # [0, 0.35]
+            0.2 * (np.sin(3 * position) + 1) -    # [0, 0.4]
             1
     )
     return reward
@@ -69,7 +69,7 @@ def evaluate_policy(env, policy, n_episodes=5):
     return total_reward / n_episodes
 
 
-def train(gradient_function, steps=10000, alpha_init=0.5, K_init=0.05, hidden_dim=16):
+def train_zo(gradient_function, steps=10000, alpha_init=0.5, K_init=5.0, alpha_decay=0.01, K_decay=0.01, hidden_dim=8):
     # Set the numpy seed
     np.random.seed(42)
 
@@ -85,25 +85,24 @@ def train(gradient_function, steps=10000, alpha_init=0.5, K_init=0.05, hidden_di
     best_reward = -np.inf
     reward_history = []
 
-    for step in tqdm(range(steps)):
-        alpha = alpha_init / (1 + 0.01 * step)
-        K = K_init / (1 + 0.01 * step)
+    # Function to maximize w.r.t. the parameters
+    def reward_function(params):
+        policy.set_params(params)
+        return evaluate_policy(env, policy)
 
-        # Function to maximize w.r.t. the parameters
-        def reward_function(params):
-            policy.set_params(params)
-            return evaluate_policy(env, policy)
+    for step in tqdm(range(steps)):
+        alpha = alpha_init / (1 + alpha_decay * step)
+        K = K_init / (1 + K_decay * step)
 
         x = policy.get_params()
         grad = gradient_function(x, reward_function, K)
-
         new_params = x + alpha * grad  # We want to maximize
 
         current_reward = reward_function(new_params)
         reward_history.append(current_reward)
 
         if current_reward > best_reward:
-            print(f"Step {step} - New best reward: {current_reward: .2f}")
+            tqdm.write(f"Step {step} - New best reward: {current_reward: .2f}")
             best_reward = current_reward
             best_params = new_params.copy()
         else:
@@ -113,7 +112,7 @@ def train(gradient_function, steps=10000, alpha_init=0.5, K_init=0.05, hidden_di
     return reward_history, best_params
 
 
-def visualize_policy(params, hidden_dim=16):
+def visualize_policy(params, hidden_dim=8):
     env = gym.make("MountainCar-v0", render_mode="human")
     # Set the seed for visualization
     env.reset(seed=0)
