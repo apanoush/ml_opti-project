@@ -1,220 +1,163 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import optimize
 import sys
 sys.path.insert(0, ".")
 from GB_ZO.algorithms import *
+from GB_ZO.utils import *
 
-
-# ---- CONFIGURATION / PARAMETERS
-
-# Set random seed for reproducibility
+# ======== CONFIGURATION ========
 np.random.seed(42)
-
-# Generate synthetic data: y = 2x + 3 + noise
-n = 1000
-x = np.linspace(0, 1, n)
-y_true = 2 * x + 3
-y = y_true + np.random.normal(0, 0.4, size=n)
-
-
-# --- USEFUL FUNCTIONS
-
-# Loss function (MSE)
-def mse_loss(theta, x, y):
-    """Mean Squared Error loss function"""
-    w, b = theta
-    y_pred = w * x + b
-    return np.mean((y_pred - y) ** 2)
-
-# Analytical gradient (Classical GD)
-def analytical_gradient(w, b, x, y):
-    y_pred = w * x + b
-    dw = 2 * np.mean((y_pred - y) * x)
-    db = 2 * np.mean(y_pred - y)
-    return np.array([dw, db])
+MAX_ITERATIONS = [8000, 1000][-1]
+LR = 0.1
+METHOD = ["analytical", "multi-point", "spsa"][-1]  # Options: "analytical", "multi-point", "spsa"
+PERTURB_SIZE = LR #0.1     # Used for ZO/SPSA methods
+N_FEATURES = [10, 1][-1]       # Number of input features (can be increased)
+N_SAMPLES = 1000
+TRUE_WEIGHTS = np.array([2.0] * N_FEATURES)  # Must match N_FEATURES
+TRUE_BIAS = 3.0
+SPARSE_DIMS = [N_FEATURES // 2, 0][0]
+OUTPUT = f"GB_ZO/linear_regression/results/{METHOD}_{N_FEATURES}D.json"
+OUTPUT_PLOT = f"GB_ZO/linear_regression/results/linear_regression2D.pdf" if METHOD == "spsa" else None
+# ===============================
 
 
+# Generate synthetic data
+def generate_data():
+    X = np.random.rand(N_SAMPLES, N_FEATURES)
 
-# def spsa_gradient(theta, c, x, y):
-#     (result, x_history) = spsa.minimize(lambda u: mse_loss(u, x,y), theta,
+    # Make some dimensions sparse (all zeros) to increase optimization difficulty
+    if SPARSE_DIMS > 0 and SPARSE_DIMS < N_FEATURES:
+        np.random.seed(42)  # For reproducibility
+        sparse_indices = np.random.choice(N_FEATURES, size=SPARSE_DIMS, replace=False)
+        X[:, sparse_indices] = 0
+
+        # Also set the corresponding true weights to 0
+        TRUE_WEIGHTS[sparse_indices] = 0
+        
+        print(f"Made dimensions {sparse_indices} sparse (all zeros)")
+        print(f"Set corresponding true weights to 0: {TRUE_WEIGHTS}")
+
+    y = X @ TRUE_WEIGHTS + TRUE_BIAS + np.random.normal(0, 0.4, N_SAMPLES)
+    return X, y, TRUE_WEIGHTS
+
+# Mean Squared Error loss
+def mse_loss(theta, X, y):
+    w = theta[:-1]
+    b = theta[-1]
+    y_pred = X @ w + b
+    return np.mean((y_pred - y)**2)
+
+# Analytical gradient (for classical GD)
+def analytical_gradient(theta, X, y):
+    w = theta[:-1]
+    b = theta[-1]
+    y_pred = X @ w + b
+    error = y_pred - y
+    dw = 2 * X.T @ error / len(y)
+    db = 2 * np.mean(error)
+    return np.concatenate([dw, [db]])
+
+# Initialize parameters
+def init_theta():
+    return np.zeros(N_FEATURES + 1)  # Weights + bias
+
+def loss_plot(loss_history, param_error):
+     # Plot results
+    plt.figure(figsize=(12, 5))
     
-#         iterations=1,
-#         epsilon=1e-8,     # Tolerance for convergence
-#         silent=True
-#     )
-#     return result
-
-# GD parameters
-lr = 0.1          # Learning rate
-iterations = 500  # Number of iterations
-h_values = [0.01, 0.1, 1.0]  # Perturbation sizes for ZO-GD
-c_values = [0.01, 0.1, 1.0]  # Perturbation sizes for SPSA
-trials = 5        # Number of trials for stochastic methods
-
-# Store results
-history = {
-    'gd': {'loss': np.zeros(iterations), 'params': np.zeros((iterations, 2))},
-    'zo': {h: {'loss': np.zeros((trials, iterations)), 
-              'params': np.zeros((trials, iterations, 2))} for h in h_values},
-    'spsa': {c: {'loss': np.zeros((trials, iterations)), 
-                 'params': np.zeros((trials, iterations, 2))} for c in c_values}
-}
-
-# ---- COMPUTATIONS --------
-
-# Classical GD (deterministic, run once)
-theta_gd = np.array([0.0, 0.0])  # [w, b]
-for i in range(iterations):
-    loss = mse_loss(theta_gd, x, y)
-    history['gd']['loss'][i] = loss
-    history['gd']['params'][i] = theta_gd
-    grad = analytical_gradient(theta_gd[0], theta_gd[1], x, y)
-    theta_gd -= lr * grad
-
-# ZO-GD (multiple trials for each h)
-for h in h_values:
-    for trial in range(trials):
-        theta_zo = np.array([0.0, 0.0])  # [w, b]
-        for i in range(iterations):
-            loss = mse_loss(theta_zo, x, y)
-            history['zo'][h]['loss'][trial, i] = loss
-            history['zo'][h]['params'][trial, i] = theta_zo
-            grad_est = multipoint_gradient_estimator(np.array([theta_zo[0], theta_zo[1]]), K=h, function=lambda t: mse_loss(t, x, y))
-            theta_zo -= lr * grad_est
-
-# SPSA (multiple trials for each c)
-for c in c_values:
-    for trial in range(trials):
-        theta_spsa = np.array([0.0, 0.0])  # [w, b]
-        for i in range(iterations):
-            loss = mse_loss(theta_spsa, x, y)
-            history['spsa'][c]['loss'][trial, i] = loss
-            history['spsa'][c]['params'][trial, i] = theta_spsa
-            grad_est = spsa_gradient(x=np.array(theta_spsa), K=c, function=lambda t: mse_loss(t, x, y))
-            theta_spsa -= lr * grad_est
-
-# Analysis: Final parameters and loss
-print("Classical GD Final Parameters:")
-print(f"  w = {theta_gd[0]:.4f}, b = {theta_gd[1]:.4f}, Loss = {mse_loss(theta_gd, x, y):.6f}\n")
-
-for h in h_values:
-    final_params = np.mean(history['zo'][h]['params'][:, -1, :], axis=0)
-    final_loss = np.mean([mse_loss(p, x, y) for p in history['zo'][h]['params'][:, -1, :]])
-    print(f"ZO-GD (h={h}) Averaged Final Parameters:")
-    print(f"  w = {final_params[0]:.4f}, b = {final_params[1]:.4f}, Loss = {final_loss:.6f}")
-
-for c in c_values:
-    final_params = np.mean(history['spsa'][c]['params'][:, -1, :], axis=0)
-    final_loss = np.mean([mse_loss(p, x, y) for p in history['spsa'][c]['params'][:, -1, :]])
-    print(f"SPSA (c={c}) Averaged Final Parameters:")
-    print(f"  w = {final_params[0]:.4f}, b = {final_params[1]:.4f}, Loss = {final_loss:.6f}")
-
-# ----- PLOTS ------
-
-# ONLY WORKS FOR 2D PROBLEMS!!!
-def plot_regression_lines(x, y, methods, labels, true_w=2, true_b=3):
-    """Plots data and regression lines from multiple methods"""
-    plt.figure(figsize=(10, 6))
-    
-    # Plot data points
-    plt.scatter(x, y, alpha=0.6, label='Data points', c='gray')
-    
-    # Generate predictions for visualization
-    x_range = np.linspace(x.min(), x.max(), 100)
-    
-    # True relationship line
-    y_true = true_w * x_range + true_b
-    plt.plot(x_range, y_true, 'g-', linewidth=3, label='True: $y=2x+3$')
-    
-    # Colors for methods
-    colors = ['b', 'r', 'm', 'c']
-    
-    # Plot each method's regression line
-    for i, (w, b) in enumerate(methods):
-        y_pred = w * x_range + b
-        plt.plot(x_range, y_pred, linestyle='--', linewidth=2.5, color=colors[i],
-                 label=f'{labels[i]}: $y={w:.3f}x + {b:.3f}$')
-    
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.title('Regression Line Comparison')
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.show()
-
-# Select best parameters for each method
-best_zo = np.mean(history['zo'][0.1]['params'][:, -1, :], axis=0)  # Using h=0.1
-best_spsa = np.mean(history['spsa'][0.1]['params'][:, -1, :], axis=0)  # Using c=0.1
-
-# Create plot
-plot_regression_lines(
-    x=x, 
-    y=y,
-    methods=[
-        (theta_gd[0], theta_gd[1]),         # Classical GD
-        (best_zo[0], best_zo[1]),           # ZO-GD
-        (best_spsa[0], best_spsa[1])        # SPSA
-    ],
-    labels=['Classical GD', 'ZO-GD (h=0.1)', 'SPSA (c=0.1)']
-)
-
-def plot_results():
-    # Convergence plot comparison
-    plt.figure(figsize=(12, 6))
-
-    # Loss vs. Iterations
     plt.subplot(1, 2, 1)
-    plt.plot(history['gd']['loss'], label='Classical GD', lw=2)
-
-    # ZO-GD (h=0.1)
-    avg_zo_loss = np.mean(history['zo'][0.1]['loss'], axis=0)
-    plt.plot(avg_zo_loss, '--', label='ZO-GD (h=0.1)')
-
-    # SPSA (c=0.1)
-    avg_spsa_loss = np.mean(history['spsa'][0.1]['loss'], axis=0)
-    plt.plot(avg_spsa_loss, '-.', label='SPSA (c=0.1)')
-
+    plt.plot(loss_history)
     plt.yscale('log')
     plt.xlabel('Iteration')
-    plt.ylabel('Loss (MSE)')
-    plt.title('Loss Convergence')
-    plt.legend()
+    plt.ylabel('MSE Loss')
+    plt.title(f'Loss Convergence ({METHOD})')
     plt.grid(True)
 
-    # Parameter error (Euclidean distance to true parameters [2, 3])
     plt.subplot(1, 2, 2)
-    true_params = np.array([2, 3])
-
-    # Classical GD error
-    gd_error = [np.linalg.norm(p - true_params) for p in history['gd']['params']]
-    plt.plot(gd_error, label='Classical GD', lw=2)
-
-    # ZO-GD error (h=0.1)
-    zo_errors = np.zeros(iterations)
-    for i in range(iterations):
-        trial_errors = [np.linalg.norm(p[i] - true_params) 
-                        for p in history['zo'][0.1]['params']]
-        zo_errors[i] = np.mean(trial_errors)
-    plt.plot(zo_errors, '--', label='ZO-GD (h=0.1)')
-
-    # SPSA error (c=0.1)
-    spsa_errors = np.zeros(iterations)
-    for i in range(iterations):
-        trial_errors = [np.linalg.norm(p[i] - true_params) 
-                        for p in history['spsa'][0.1]['params']]
-        spsa_errors[i] = np.mean(trial_errors)
-    plt.plot(spsa_errors, '-.', label='SPSA (c=0.1)')
-
+    plt.plot(param_error)
     plt.yscale('log')
     plt.xlabel('Iteration')
     plt.ylabel('Parameter Error (L2 Norm)')
-    plt.title('Parameter Error Convergence')
-    plt.legend()
+    plt.title('Distance to True Parameters')
     plt.grid(True)
 
     plt.tight_layout()
     plt.show()
 
-plot_results()
+
+def plot_2d_results(X, y, final_x):
+    plt.figure(figsize=(9, 3)) #(10, 6)
+    plt.scatter(X[:, 0], y, alpha=0.3, c='gray', label='Data points')
+    x_range = np.linspace(0, 1, 100)
+    y_true = TRUE_WEIGHTS[0]*x_range + TRUE_BIAS
+    y_pred = final_x[0]*x_range + final_x[1]
+    plt.plot(x_range, y_true, 'g-', lw=3, label='True relationship: $y=2x + 3$')
+    plt.plot(x_range, y_pred, 'r--', lw=2.5, label=f'Learned: $y={final_x[0]:.3f}x + {final_x[1]:.3f}$')
+    plt.xlabel('Feature 1')
+    plt.ylabel('Feature 2')
+    plt.legend()
+    plt.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(OUTPUT_PLOT)
+    plt.show()
+
+# Main optimization function
+def main():
+    X, y, TRUE_WEIGHTS = generate_data()
+    initial_theta = init_theta()
+    true_params = np.concatenate([TRUE_WEIGHTS, [TRUE_BIAS]])
+
+    print(true_params)
+    
+    # Configure gradient function based on method
+    if METHOD == "analytical":
+        grad_func = lambda theta: analytical_gradient(theta, X, y)
+    elif METHOD == "multi-point":
+        grad_func = lambda theta: multipoint_gradient_estimator(
+            theta, lambda t: mse_loss(t, X, y), K=PERTURB_SIZE
+        )
+    elif METHOD == "spsa":
+        grad_func = lambda theta: spsa_gradient(
+            theta, lambda t: mse_loss(t, X, y), K=PERTURB_SIZE
+        )
+    
+    # Run optimization
+    final_x, x_history = gradient_descent(
+        initial_theta,
+        learning_rate=LR,
+        max_iterations=MAX_ITERATIONS,
+        gradient_function=grad_func,
+        tolerance=None #1e-15
+    )
+    
+    # Compute loss history
+    loss_history = [mse_loss(theta, X, y) for theta in x_history]
+    param_error = [np.linalg.norm(theta - true_params) for theta in x_history]
+    
+    # Print results
+    print(f"\nFinal parameters ({METHOD}):")
+    print(f"  Weights: {final_x[:-1]}")
+    print(f"  Bias:    {final_x[-1]:.4f}")
+    print(f"  Loss:    {loss_history[-1]:.6f}")
+    print(f"  Param Error: {param_error[-1]:.6f}")
+
+    additional_info = {
+        "n_samples": N_SAMPLES,
+        "n_features": N_FEATURES,
+        "method": METHOD,
+        "lr": LR,
+        "max_iterations": MAX_ITERATIONS,
+        "sparse_dims": SPARSE_DIMS,
+        "param_error": param_error
+    }
+    output_result(final_x.tolist(), x_history.tolist(), loss_history, OUTPUT, additional_info)
+    
+    loss_plot(loss_history, param_error)
+
+    # For 1D data: plot regression line
+    if N_FEATURES == 1:
+        plot_2d_results(X, y, final_x)
+        
+
+if __name__ == "__main__":
+    main()

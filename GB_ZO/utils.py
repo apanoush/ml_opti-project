@@ -3,8 +3,14 @@ import numpy as np
 from tqdm import tqdm
 import json
 
+LABELS = {
+    "spsa": "SPSA",
+    "SPSA": "SPSA",
+    "multi-point": "MPGE",
+    "analytical": "Analytical"
+}
 
-def output_result(final_x, x_history, loss_history, output_path, additional_info: dict = None):
+def output_result(final_x, x_history, loss_history, output_path, additional_info:dict = None):
     results = {
         "final_x": final_x,
         "x_history": x_history,

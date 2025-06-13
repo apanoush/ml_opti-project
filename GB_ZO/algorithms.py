@@ -79,7 +79,7 @@ def gradient_descent(initial_point, learning_rate, gradient_function, max_iterat
         grad = gradient_function(x)
 
         # Check for convergence
-        if np.linalg.norm(grad) < tolerance:
+        if tolerance and np.linalg.norm(grad) < tolerance:
             break
 
         # Update parameters

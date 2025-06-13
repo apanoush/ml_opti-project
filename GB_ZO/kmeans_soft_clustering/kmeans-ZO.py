@@ -7,8 +7,23 @@ from GB_ZO.algorithms import *
 
 MAX_ITERATIONS = 10000
 LR = [3e-3, 1e-5, 1e-3][-1]
-METHOD = ["spsa", "multi-point"][0]
+METHOD = ["spsa", "multi-point", "analytical"][0]
 ONLY_RESULTS = False
+
+np.random.seed(42)
+
+def analytical_gradient(theta):
+    """Analytical gradient for fuzzy c-means cluster centers"""
+    C = theta.reshape(c, n_features)
+    W = compute_membership_matrix(X, C, m)
+    U = W ** m  # Weight matrix (n_samples, c)
+    
+    # Compute gradient components
+    weighted_sum = U.T @ X  # (c, n_features)
+    weights_sum = np.sum(U, axis=0)  # (c,)
+    grad_centers = -2 * (weighted_sum - weights_sum[:, np.newaxis] * C)
+    
+    return grad_centers.flatten()
 
 FUNCTION = {
     "spsa": lambda x: spsa_gradient(
@@ -16,7 +31,8 @@ FUNCTION = {
     ),
     "multi-point": lambda x: multipoint_gradient_estimator(
         x, objective, LR
-    )
+    ),
+    "analytical": analytical_gradient
 }[METHOD]
 
 X, y, n_samples, n_features, c , m, sparse_dims = generate_data()
