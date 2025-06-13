@@ -5,8 +5,8 @@ This repository contains the implementation and experiments for the research pro
 ## Research Overview
 Gradient estimation is crucial for optimization in black-box scenarios where explicit gradients are unavailable. This project empirically compares two prominent zero-order methods:
 1. **Simultaneous Perturbation Stochastic Approximation (SPSA)**
-2. **Multi-point gradient estimators**
-across three distinct problem domains:
+2. **Multi-Point Gradient Estimators (MPGE)**
+across four distinct problem domains:
 - Linear Regression
 - K-Means Clustering
 - Reinforcement Learning
@@ -24,7 +24,7 @@ Damien Genoud - damien.genoud@epfl.ch
 - `eyperiments/`: All problems from the report
   - `algorithms.py`: Implementations of optimization methods
     - `spsa`: SPSA gradient estimator
-    - `multi_point`: Multi-point gradient estimators
+    - `multi_point`: MPGE gradient estimators
     - `gradient_descent`: Gradient descent framework
   - `linear_regression/`
     - `linear_regression.py`: Script to run all 3 algorithms on a linear regression problem with chosen parameters
@@ -34,7 +34,9 @@ Damien Genoud - damien.genoud@epfl.ch
     - `kmeans.py`: Script to run all 3 algorithms on a soft kmeans clustering problem with chosen parameters
     - `plot.py` Script to plot all additional figures from the report along with computing the results tables
   - `mountain_car/`
+    - `mountain_car.py`: Script to run SPSA and MPGE on the Mountain Car task (Reinforcement Learning)
   - `NAS_spsa/`
+    - `spsa_NAS.py`: Script to run SPSA and Grid-Search on a Neural Architecture Search task (NAS)
 
 ### Key Files
 - `report.pdf` Report of the project
