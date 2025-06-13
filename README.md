@@ -14,35 +14,25 @@ across three distinct problem domains:
 The study evaluates convergence speed, solution quality, and robustness under different noise conditions.
 
 ## Team
-[Your Name] - [your.email@domain.edu]  
-[Teammate 1 Name] - [teammate1.email@domain.edu]  
-[Teammate 2 Name] - [teammate2.email@domain.edu]
+Anoush Azar-Pey - anoush.azar-pey@epfl.ch  
+Clementine Jordan - clementine.jordan@epfl.ch  
+Damien Genoud - damien.genoud@epfl.ch
 
 ## Repository Structure
 
-### Core Components
-- `algorithms.py`: Implementations of optimization methods
-  - `spsa`: SPSA gradient estimator
-  - `multi_point`: Multi-point gradient estimators
-  - `gradient_descent`: Gradient descent framework
-- `problems/`: Benchmark problems
+- `eyperiments/`: All problems from the report
+  - `algorithms.py`: Implementations of optimization methods
+    - `spsa`: SPSA gradient estimator
+    - `multi_point`: Multi-point gradient estimators
+    - `gradient_descent`: Gradient descent framework
   - `linear_regression/`
-  - `kmeans/`
-  - `reinforcement_learning/`
-- `experiments/`: Experiment pipelines
-  - `convergence_analysis/`
-  - `noise_robustness/`
-  - `hyperparameter_sensitivity/`
-- `results/`: Output files
-  - `figures/` (Generated plots)
-  - `metrics/` (Quantitative results)
-- `tests/`: Validation tests
-- `utils/`: Helper functions
+  - `soft_kmeans/`
+  - `mountain_car/`
+  - `NAS_spsa/`
 
 ### Key Files
-- `experiment_runner.py`: Main script to execute experiments
-- `results_analysis.ipynb`: Jupyter notebook for results visualization
-- `environment.yml`: Conda environment specification
+- `report.pdf` Report of the project
+- `experiments/results.ipynb`: Jupyter notebook for results visualization
 - `requirements.txt`: Python dependencies
 
 ## Reproducibility
@@ -50,11 +40,12 @@ The study evaluates convergence speed, solution quality, and robustness under di
 ### Installation & Setup
 ```bash
 # Clone repository
-git clone https://github.com/your-username/zero-order-comparison.git
+git clone https://github.com/apanoush/ml_opti-project.git
 
-# Create conda environment (recommended)
-conda env create -f environment.yml
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Alternatively install via pip
+# Install dependencies
 pip install -r requirements.txt
 ```
