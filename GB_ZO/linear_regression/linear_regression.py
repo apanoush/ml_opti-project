@@ -21,6 +21,57 @@ OUTPUT = f"GB_ZO/linear_regression/results/{METHOD}_{N_FEATURES}D.json"
 OUTPUT_PLOT = f"GB_ZO/linear_regression/results/linear_regression2D.pdf" if METHOD == "spsa" else None
 
 
+def main():
+    print(f"Using {LABELS[METHOD]}")
+
+    X, y, TRUE_WEIGHTS = generate_data()
+    initial_theta = init_theta()
+    true_params = np.concatenate([TRUE_WEIGHTS, [TRUE_BIAS]])
+
+    print(true_params)
+    
+    if METHOD == "analytical":
+        grad_func = lambda theta: analytical_gradient(theta, X, y)
+    elif METHOD == "multi-point":
+        grad_func = lambda theta: multipoint_gradient_estimator(
+            theta, lambda t: mse_loss(t, X, y), K=PERTURB_SIZE
+        )
+    elif METHOD == "spsa":
+        grad_func = lambda theta: spsa_gradient(
+            theta, lambda t: mse_loss(t, X, y), K=PERTURB_SIZE
+        )
+    
+    final_x, x_history = gradient_descent(
+        initial_theta,
+        learning_rate=LR,
+        max_iterations=MAX_ITERATIONS,
+        gradient_function=grad_func,
+        tolerance=None #1e-15
+    )
+    
+    loss_history = [mse_loss(theta, X, y) for theta in x_history]
+    param_error = [np.linalg.norm(theta - true_params) for theta in x_history]
+    
+    print(f"Final parameters ({METHOD}):")
+    print(f"Loss: {loss_history[-1]:.6f}")
+    print(f"Param Error: {param_error[-1]:.6f}")
+
+    additional_info = {
+        "n_samples": N_SAMPLES,
+        "n_features": N_FEATURES,
+        "method": METHOD,
+        "lr": LR,
+        "max_iterations": MAX_ITERATIONS,
+        "sparse_dims": SPARSE_DIMS,
+        "param_error": param_error
+    }
+    output_result(final_x.tolist(), x_history.tolist(), loss_history, OUTPUT, additional_info)
+    
+    # for 1D data: plot regression line
+    if N_FEATURES == 1:
+        plot_2d_results(X, y, final_x)
+
+
 def generate_data():
     """generate synthetic data"""
     X = np.random.rand(N_SAMPLES, N_FEATURES)
@@ -77,54 +128,6 @@ def plot_2d_results(X, y, final_x):
     plt.savefig(OUTPUT_PLOT)
     plt.show()
 
-def main():
-    X, y, TRUE_WEIGHTS = generate_data()
-    initial_theta = init_theta()
-    true_params = np.concatenate([TRUE_WEIGHTS, [TRUE_BIAS]])
-
-    print(true_params)
-    
-    if METHOD == "analytical":
-        grad_func = lambda theta: analytical_gradient(theta, X, y)
-    elif METHOD == "multi-point":
-        grad_func = lambda theta: multipoint_gradient_estimator(
-            theta, lambda t: mse_loss(t, X, y), K=PERTURB_SIZE
-        )
-    elif METHOD == "spsa":
-        grad_func = lambda theta: spsa_gradient(
-            theta, lambda t: mse_loss(t, X, y), K=PERTURB_SIZE
-        )
-    
-    final_x, x_history = gradient_descent(
-        initial_theta,
-        learning_rate=LR,
-        max_iterations=MAX_ITERATIONS,
-        gradient_function=grad_func,
-        tolerance=None #1e-15
-    )
-    
-    loss_history = [mse_loss(theta, X, y) for theta in x_history]
-    param_error = [np.linalg.norm(theta - true_params) for theta in x_history]
-    
-    print(f"Final parameters ({METHOD}):")
-    print(f"Loss: {loss_history[-1]:.6f}")
-    print(f"Param Error: {param_error[-1]:.6f}")
-
-    additional_info = {
-        "n_samples": N_SAMPLES,
-        "n_features": N_FEATURES,
-        "method": METHOD,
-        "lr": LR,
-        "max_iterations": MAX_ITERATIONS,
-        "sparse_dims": SPARSE_DIMS,
-        "param_error": param_error
-    }
-    output_result(final_x.tolist(), x_history.tolist(), loss_history, OUTPUT, additional_info)
-    
-    # for 1D data: plot regression line
-    if N_FEATURES == 1:
-        plot_2d_results(X, y, final_x)
-        
 
 if __name__ == "__main__":
     main()

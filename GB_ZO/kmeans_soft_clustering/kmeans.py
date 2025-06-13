@@ -3,8 +3,8 @@
 import numpy as np
 import sys
 sys.path.insert(0, ".")
-from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment, generate_data
-from GB_ZO.utils import compute_loss, plot_loss_history, output_result
+from GB_ZO.kmeans_soft_clustering.utils import plot_assignment, generate_data
+from GB_ZO.utils import compute_loss, plot_loss_history, output_result, LABELS
 from GB_ZO.algorithms import *
 
 # ! CAN CHANGE THE PARAMETERS OF THE DATA GENERATION METHOD IN UTILS.PY
@@ -47,6 +47,8 @@ OUTPUT_PLOT = f"GB_ZO/kmeans_soft_clustering/results/clusters2D.pdf" if METHOD =
     
 
 def main():
+    print(f"Using {LABELS[METHOD]}")
+
     initial_x = init_theta()
 
     print(f"Problem shape is {np.shape(initial_x)}")

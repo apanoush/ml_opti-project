@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import json
 
+# useful for changing the name of methods in plots
 LABELS = {
     "spsa": "SPSA",
     "SPSA": "SPSA",
@@ -11,6 +12,7 @@ LABELS = {
 }
 
 def output_result(final_x, x_history, loss_history, output_path, additional_info:dict = None):
+    """serializing optimization results"""
     results = {
         "final_x": final_x,
         "x_history": x_history,
@@ -21,14 +23,13 @@ def output_result(final_x, x_history, loss_history, output_path, additional_info
 
     json.dump(results, open(output_path, "w"), indent=4)
 
-
 def plot_loss_history(loss_history):
-    """Plots the training loss over iterations."""
+    """plots the training loss over iterations; useful to quickly see how does the algorithms perform"""
     plt.figure(figsize=(10, 6))
     plt.plot(loss_history, label='Training Loss')
-    plt.xlabel('Iteration (or Batch)')
+    plt.xlabel('Iteration')
     plt.ylabel('Loss')
-    plt.title('SPSA Training Loss Over Iterations')
+    plt.title('Training Loss Over Iterations')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -50,7 +51,6 @@ def compute_loss(x_history, loss_function, X_train=None, y_train=None, batch_siz
 
 
 def compute_loss_and_plot(x_history, loss_function, X_train=None, y_train=None, batch_size=None):
-    # Plot the loss history
     loss_history = compute_loss(x_history, loss_function, X_train, y_train, batch_size)
 
     plot_loss_history(loss_history)
@@ -59,7 +59,7 @@ def compute_loss_and_plot(x_history, loss_function, X_train=None, y_train=None, 
 
 def compute_moving_avg(history, window_size):
     data = np.array(history)
-    cumsum = np.cumsum(np.insert(data, 0, 0))  # Insert zero at start for easy indexing
-    smoothed = (cumsum[window_size:] - cumsum[:-window_size]) / window_size  # Moving average for points >= window_size
+    cumsum = np.cumsum(np.insert(data, 0, 0))  
+    smoothed = (cumsum[window_size:] - cumsum[:-window_size]) / window_size  
     first_points = [np.mean(data[:i + 1]) for i in range(window_size - 1)]
     return np.concatenate([first_points, smoothed])
