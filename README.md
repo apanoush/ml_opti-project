@@ -1,4 +1,4 @@
-# Comparative Analysis of Zero-Order Gradient Estimation Methods
+# Exploring the Capabilities of Zeroth-Order Methods on ML tasks
 
 This repository contains the implementation and experiments for the research project comparing zero-order optimization algorithms (SPSA vs. multi-point gradient estimators) applied to gradient descent across multiple problem domains. 
 
