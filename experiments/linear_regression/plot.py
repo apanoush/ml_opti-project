@@ -5,13 +5,13 @@ import json
 import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, ".")
-from GB_ZO.utils import LABELS
+from experiments.utils import LABELS
 import numpy as np
 
 DIMENSION = [1, 10][0]
-RESULTS_PATH = "GB_ZO/linear_regression/results"
-OUTPUT_PATH = f"GB_ZO/linear_regression/results/{DIMENSION}D.pdf"
-OUTPUT_TABLE = f"GB_ZO/linear_regression/results/table_{DIMENSION}D.tex"
+RESULTS_PATH = "experiments/linear_regression/results"
+OUTPUT_PATH = f"experiments/linear_regression/results/{DIMENSION}D.pdf"
+OUTPUT_TABLE = f"experiments/linear_regression/results/table_{DIMENSION}D.tex"
 LOG = True
 XLIM1 = {
     10: (-3, 300),

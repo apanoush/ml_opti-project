@@ -3,9 +3,9 @@
 import numpy as np
 import sys
 sys.path.insert(0, ".")
-from GB_ZO.kmeans_soft_clustering.utils import plot_assignment, generate_data
-from GB_ZO.utils import compute_loss, plot_loss_history, output_result, LABELS
-from GB_ZO.algorithms import *
+from experiments.soft_kmeans.utils import plot_assignment, generate_data
+from experiments.utils import compute_loss, plot_loss_history, output_result, LABELS
+from experiments.algorithms import *
 
 # ! CAN CHANGE THE PARAMETERS OF THE DATA GENERATION METHOD IN UTILS.PY
 
@@ -42,8 +42,8 @@ FUNCTION = {
 
 X, y, n_samples, n_features, c , m, sparse_dims = generate_data()
 
-OUTPUT = f"GB_ZO/kmeans_soft_clustering/results/{METHOD}_{n_features}D.json"
-OUTPUT_PLOT = f"GB_ZO/kmeans_soft_clustering/results/clusters2D.pdf" if METHOD == "spsa" else None
+OUTPUT = f"experiments/soft_kmeans/results/{METHOD}_{n_features}D.json"
+OUTPUT_PLOT = f"experiments/soft_kmeans/results/clusters2D.pdf" if METHOD == "spsa" else None
     
 
 def main():

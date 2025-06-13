@@ -2,7 +2,7 @@ import gymnasium as gym
 import numpy as np
 from tqdm.notebook import tqdm
 import matplotlib.pyplot as plt
-from GB_ZO.utils import compute_moving_avg
+from experiments.utils import compute_moving_avg
 
 
 # Note: D=51 => very slow with Multipoint Gradient Estimator, but fast with SPSA.

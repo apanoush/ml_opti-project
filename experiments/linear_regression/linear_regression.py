@@ -4,8 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, ".")
-from GB_ZO.algorithms import *
-from GB_ZO.utils import *
+from experiments.algorithms import *
+from experiments.utils import *
 
 np.random.seed(42) # for reproducibility
 MAX_ITERATIONS = [8000, 1000][-1]
@@ -17,8 +17,8 @@ N_SAMPLES = 1000
 TRUE_WEIGHTS = np.array([2.0] * N_FEATURES)  
 TRUE_BIAS = 3.0
 SPARSE_DIMS = [N_FEATURES // 2, 0][0]
-OUTPUT = f"GB_ZO/linear_regression/results/{METHOD}_{N_FEATURES}D.json"
-OUTPUT_PLOT = f"GB_ZO/linear_regression/results/linear_regression2D.pdf" if METHOD == "spsa" else None
+OUTPUT = f"experiments/linear_regression/results/{METHOD}_{N_FEATURES}D.json"
+OUTPUT_PLOT = f"experiments/linear_regression/results/linear_regression2D.pdf" if METHOD == "spsa" else None
 
 
 def main():

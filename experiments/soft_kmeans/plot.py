@@ -5,13 +5,13 @@ import json
 import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, ".")
-from GB_ZO.utils import LABELS
+from experiments.utils import LABELS
 import numpy as np
 
 DIMENSION = [2, 6][0]
-RESULTS_PATH = "GB_ZO/kmeans_soft_clustering/results"
-OUTPUT_PATH = f"GB_ZO/kmeans_soft_clustering/results/{DIMENSION}D.pdf"
-OUTPUT_TABLE = f"GB_ZO/kmeans_soft_clustering/results/table_{DIMENSION}D.tex"
+RESULTS_PATH = "experiments/soft_kmeans/results"
+OUTPUT_PATH = f"experiments/soft_kmeans/results/{DIMENSION}D.pdf"
+OUTPUT_TABLE = f"experiments/soft_kmeans/results/table_{DIMENSION}D.tex"
 XLIM = {
     6: (-16, 1600),
     2: (-18, 1800)
