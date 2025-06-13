@@ -26,7 +26,12 @@ Damien Genoud - damien.genoud@epfl.ch
     - `multi_point`: Multi-point gradient estimators
     - `gradient_descent`: Gradient descent framework
   - `linear_regression/`
+    - `linear_regression.py`: Script to run all 3 algorithms on a linear regression problem with chosen parameters
+    - `plot.py` Script to plot all additional figures from the report along with computing the results tables
   - `soft_kmeans/`
+    - `utils.py`: Contains key parameters for the data generation
+    - `kmeans.py`: Script to run all 3 algorithms on a soft kmeans clustering problem with chosen parameters
+    - `plot.py` Script to plot all additional figures from the report along with computing the results tables
   - `mountain_car/`
   - `NAS_spsa/`
 

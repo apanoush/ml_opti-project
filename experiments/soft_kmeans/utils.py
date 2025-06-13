@@ -1,3 +1,5 @@
+"""contains key parameters for the data generation"""
+
 import numpy as np
 from sklearn.datasets import make_blobs
 
