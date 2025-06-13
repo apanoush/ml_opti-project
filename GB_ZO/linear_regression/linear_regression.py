@@ -1,3 +1,5 @@
+"""script to run all 3 algorithms on a linear regression problem with chosen parameters"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -5,33 +7,30 @@ sys.path.insert(0, ".")
 from GB_ZO.algorithms import *
 from GB_ZO.utils import *
 
-# ======== CONFIGURATION ========
-np.random.seed(42)
+np.random.seed(42) # for reproducibility
 MAX_ITERATIONS = [8000, 1000][-1]
 LR = 0.1
-METHOD = ["analytical", "multi-point", "spsa"][-1]  # Options: "analytical", "multi-point", "spsa"
-PERTURB_SIZE = LR #0.1     # Used for ZO/SPSA methods
-N_FEATURES = [10, 1][-1]       # Number of input features (can be increased)
+METHOD = ["analytical", "multi-point", "spsa"][-1] 
+PERTURB_SIZE = LR #0.1     # used for MPGE/SPSA methods
+N_FEATURES = [10, 1][-1]       
 N_SAMPLES = 1000
-TRUE_WEIGHTS = np.array([2.0] * N_FEATURES)  # Must match N_FEATURES
+TRUE_WEIGHTS = np.array([2.0] * N_FEATURES)  
 TRUE_BIAS = 3.0
 SPARSE_DIMS = [N_FEATURES // 2, 0][0]
 OUTPUT = f"GB_ZO/linear_regression/results/{METHOD}_{N_FEATURES}D.json"
 OUTPUT_PLOT = f"GB_ZO/linear_regression/results/linear_regression2D.pdf" if METHOD == "spsa" else None
-# ===============================
 
 
-# Generate synthetic data
 def generate_data():
+    """generate synthetic data"""
     X = np.random.rand(N_SAMPLES, N_FEATURES)
 
-    # Make some dimensions sparse (all zeros) to increase optimization difficulty
+    # make some dimensions sparse (all zeros) to increase optimization difficulty
     if SPARSE_DIMS > 0 and SPARSE_DIMS < N_FEATURES:
-        np.random.seed(42)  # For reproducibility
         sparse_indices = np.random.choice(N_FEATURES, size=SPARSE_DIMS, replace=False)
         X[:, sparse_indices] = 0
 
-        # Also set the corresponding true weights to 0
+        # also set the corresponding true weights to 0
         TRUE_WEIGHTS[sparse_indices] = 0
         
         print(f"Made dimensions {sparse_indices} sparse (all zeros)")
@@ -40,14 +39,13 @@ def generate_data():
     y = X @ TRUE_WEIGHTS + TRUE_BIAS + np.random.normal(0, 0.4, N_SAMPLES)
     return X, y, TRUE_WEIGHTS
 
-# Mean Squared Error loss
 def mse_loss(theta, X, y):
+    """standard MSE loss"""
     w = theta[:-1]
     b = theta[-1]
     y_pred = X @ w + b
     return np.mean((y_pred - y)**2)
 
-# Analytical gradient (for classical GD)
 def analytical_gradient(theta, X, y):
     w = theta[:-1]
     b = theta[-1]
@@ -57,35 +55,13 @@ def analytical_gradient(theta, X, y):
     db = 2 * np.mean(error)
     return np.concatenate([dw, [db]])
 
-# Initialize parameters
 def init_theta():
-    return np.zeros(N_FEATURES + 1)  # Weights + bias
-
-def loss_plot(loss_history, param_error):
-     # Plot results
-    plt.figure(figsize=(12, 5))
-    
-    plt.subplot(1, 2, 1)
-    plt.plot(loss_history)
-    plt.yscale('log')
-    plt.xlabel('Iteration')
-    plt.ylabel('MSE Loss')
-    plt.title(f'Loss Convergence ({METHOD})')
-    plt.grid(True)
-
-    plt.subplot(1, 2, 2)
-    plt.plot(param_error)
-    plt.yscale('log')
-    plt.xlabel('Iteration')
-    plt.ylabel('Parameter Error (L2 Norm)')
-    plt.title('Distance to True Parameters')
-    plt.grid(True)
-
-    plt.tight_layout()
-    plt.show()
+    """initialize parameters"""
+    return np.zeros(N_FEATURES + 1)  # weights + bias
 
 
 def plot_2d_results(X, y, final_x):
+    """visually plot generated data along with true and estimated relationship"""
     plt.figure(figsize=(9, 3)) #(10, 6)
     plt.scatter(X[:, 0], y, alpha=0.3, c='gray', label='Data points')
     x_range = np.linspace(0, 1, 100)
@@ -101,7 +77,6 @@ def plot_2d_results(X, y, final_x):
     plt.savefig(OUTPUT_PLOT)
     plt.show()
 
-# Main optimization function
 def main():
     X, y, TRUE_WEIGHTS = generate_data()
     initial_theta = init_theta()
@@ -109,7 +84,6 @@ def main():
 
     print(true_params)
     
-    # Configure gradient function based on method
     if METHOD == "analytical":
         grad_func = lambda theta: analytical_gradient(theta, X, y)
     elif METHOD == "multi-point":
@@ -121,7 +95,6 @@ def main():
             theta, lambda t: mse_loss(t, X, y), K=PERTURB_SIZE
         )
     
-    # Run optimization
     final_x, x_history = gradient_descent(
         initial_theta,
         learning_rate=LR,
@@ -130,16 +103,12 @@ def main():
         tolerance=None #1e-15
     )
     
-    # Compute loss history
     loss_history = [mse_loss(theta, X, y) for theta in x_history]
     param_error = [np.linalg.norm(theta - true_params) for theta in x_history]
     
-    # Print results
-    print(f"\nFinal parameters ({METHOD}):")
-    print(f"  Weights: {final_x[:-1]}")
-    print(f"  Bias:    {final_x[-1]:.4f}")
-    print(f"  Loss:    {loss_history[-1]:.6f}")
-    print(f"  Param Error: {param_error[-1]:.6f}")
+    print(f"Final parameters ({METHOD}):")
+    print(f"Loss: {loss_history[-1]:.6f}")
+    print(f"Param Error: {param_error[-1]:.6f}")
 
     additional_info = {
         "n_samples": N_SAMPLES,
@@ -152,9 +121,7 @@ def main():
     }
     output_result(final_x.tolist(), x_history.tolist(), loss_history, OUTPUT, additional_info)
     
-    loss_plot(loss_history, param_error)
-
-    # For 1D data: plot regression line
+    # for 1D data: plot regression line
     if N_FEATURES == 1:
         plot_2d_results(X, y, final_x)
         

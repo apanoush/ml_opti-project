@@ -1,3 +1,5 @@
+"""script to plot all additional figures from the report along with computing the results tables"""
+
 import os
 import json
 import matplotlib.pyplot as plt
@@ -49,7 +51,7 @@ def load_results(results_path):
     return results
 
 def plot_loss_history(res1, res2, res3):
-    """Plots the training loss over iterations."""
+    """plots the training loss over iterations"""
     label1 = LABELS.get(res1["method"])
     label2 = LABELS.get(res2["method"])
     label3 = LABELS.get(res3["method"])
@@ -77,16 +79,7 @@ def plot_loss_history(res1, res2, res3):
     plt.show()
 
 def prepare_table_dict(results, last_n=10):
-    """
-    Takes 2 np arrays as inputs and outputs the mean of their last 10 elements
-    
-    Args:
-        results: numpy array of results
-        empirical_coverage: numpy array of empirical coverage values
-    
-    Returns:
-        dict: Dictionary with mean of last 10 elements for each input array
-    """
+    """to be used before using generate_latex_table"""
     results_mean = np.mean(results[:XLIM[-1]][-last_n:])
     
     return {
@@ -108,21 +101,14 @@ def generate_latex_table(results, filename, round_digits=4):
     \caption{Algorithm performance: average of the last 10 iterations}
     \end{table}"""
 
-    # Process each algorithm
     rows = []
     for algo, values in results.items():
-        # Format numerical values
         final_val = round(values['final_result'], round_digits)
-    
-        # Escape special LaTeX characters in algorithm names
         algo_escaped = LABELS[algo].replace('_', '\\_')
-        
         rows.append(f"{algo_escaped} & ${final_val}$ \\\\")
 
-    # Combine all components
     latex_content = latex_header + "\n".join(rows) + "\n" + latex_footer
     
-    # Write to file
     with open(filename, 'w') as f:
         f.write(latex_content)
 

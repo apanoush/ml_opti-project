@@ -1,31 +1,30 @@
+"""script containing all relevant algorithms for linear regression and soft kmeans problems"""
+
 import numpy as np
 from tqdm import tqdm
 
-
 def multipoint_gradient_estimator(x: np.ndarray, function, K: float, random_K_amplificator: bool = False) -> np.ndarray:
-    """Multipoint gradient estimator using orthogonal perturbations."""
+    """MPGE using orthogonal perturbations"""
 
-    M = 3 / 2  # Amplification range
+    M = 3 / 2  # amplification range
     random_K_amplificator = np.random.uniform(1 / M, M) if random_K_amplificator else 1
 
     dimension = x.shape[0]
 
-    # Generate orthogonal vectors for each dimension
-
-    # First vector: random unit vector
+    # generate first vector
     z = []
     z_first = np.random.randn(dimension)
     z_first /= np.linalg.norm(z_first)
     z.append(z_first)
 
-    # Generate remaining orthogonal vectors using Gram-Schmidt
+    # generate remaining orthogonal vectors
     for i in range(1, dimension):
         z_new = np.random.randn(dimension)
         for j in range(i):
             proj = np.dot(z_new, z[j])
             z_new -= proj * z[j]
         norm = np.linalg.norm(z_new)
-        if norm > 1e-10:  # Avoid division by zero
+        if norm > 1e-10:  # avoid division by zero
             z_new /= norm
             z.append(z_new)
 
@@ -38,11 +37,9 @@ def multipoint_gradient_estimator(x: np.ndarray, function, K: float, random_K_am
         f_plus = function(x_plus)
         f_minus = function(x_minus)
 
-        # Gradient estimate along this direction
         grad_estimate = z_ * (f_plus - f_minus) / (2 * K * random_K_amplificator)
         zero_order_estimations.append(grad_estimate)
 
-    # Average over all directions
     grad = np.mean(zero_order_estimations, axis=0)
     return grad
 
@@ -52,23 +49,20 @@ def spsa_gradient(x: np.ndarray, function, K: float):
 
     dimension = x.shape[0]
 
-    # Generate Rademacher-distributed perturbation vector (±1)
+    # random perturbations vector
     delta = np.random.choice([-1, 1], size=dimension)
 
-    # Perturbed parameters
     x_plus = x + K * delta
     x_minus = x - K * delta
 
-    # Evaluate loss at perturbed points
     f_plus = function(x_plus)
     f_minus = function(x_minus)
 
-    # Gradient estimate
     return delta * (f_plus - f_minus) / (2 * K)
 
 
 def gradient_descent(initial_point, learning_rate, gradient_function, max_iterations=1000, tolerance=1e-6):
-    """Performs gradient descent optimization"""
+    """performs gradient descent optimization"""
 
     x = initial_point.copy()
     x_history = np.zeros((max_iterations + 1, *x.shape))
@@ -78,11 +72,9 @@ def gradient_descent(initial_point, learning_rate, gradient_function, max_iterat
                   total=max_iterations):
         grad = gradient_function(x)
 
-        # Check for convergence
         if tolerance and np.linalg.norm(grad) < tolerance:
             break
 
-        # Update parameters
         x = x - learning_rate * grad
         x_history[i] = x
 

@@ -1,3 +1,5 @@
+"""script to run all 3 algorithms on a soft kmeans clustering problem with chosen parameters"""
+
 import numpy as np
 import sys
 sys.path.insert(0, ".")
@@ -5,20 +7,23 @@ from GB_ZO.kmeans_soft_clustering.kmeans import plot_assignment, generate_data
 from GB_ZO.utils import compute_loss, plot_loss_history, output_result
 from GB_ZO.algorithms import *
 
+# ! CAN CHANGE THE PARAMETERS OF THE DATA GENERATION METHOD IN UTILS.PY
+
 MAX_ITERATIONS = 10000
 LR = [3e-3, 1e-5, 1e-3][-1]
 METHOD = ["spsa", "multi-point", "analytical"][0]
 ONLY_RESULTS = False
 
+# for reproducibility
 np.random.seed(42)
 
 def analytical_gradient(theta):
-    """Analytical gradient for fuzzy c-means cluster centers"""
+    """analytical gradient for soft kmeans cluster centers"""
     C = theta.reshape(c, n_features)
     W = compute_membership_matrix(X, C, m)
-    U = W ** m  # Weight matrix (n_samples, c)
+    U = W ** m  
     
-    # Compute gradient components
+    # compute gradient components
     weighted_sum = U.T @ X  # (c, n_features)
     weights_sum = np.sum(U, axis=0)  # (c,)
     grad_centers = -2 * (weighted_sum - weights_sum[:, np.newaxis] * C)
@@ -53,7 +58,7 @@ def main():
         tolerance=1e-20
     )
 
-    # Extract optimized parameters
+    # extract optimized parameters
     C_opt = theta_opt.reshape(c, n_features)
     W_opt = compute_membership_matrix(X, C_opt, m)
 
@@ -79,17 +84,17 @@ def main():
 
 
 def compute_membership_matrix(X, C, m):
-    """Compute membership matrix using fuzzy c-means formula"""
+    """compute membership matrix using soft kmeans formula"""
     n_samples, n_features = X.shape
     c = C.shape[0]
     
-    # Compute distances
+    # compute distances
     distances = np.sqrt(((X[:, np.newaxis, :] - C[np.newaxis, :, :]) ** 2).sum(axis=2))
     
-    # Avoid division by zero
+    # avoid division by zero
     distances = np.maximum(distances, 1e-8)
     
-    # Compute membership matrix
+    # compute membership matrix
     power = 2.0 / (m - 1)
     W = np.zeros((n_samples, c))
     
@@ -99,39 +104,22 @@ def compute_membership_matrix(X, C, m):
     
     return W
 
-# Initialize only cluster centers (not membership matrix)
 def init_theta():
-    # Initialize cluster centers near data points for better convergence
+    """initializes inital point / initial cluster centers"""
     indices = np.random.choice(n_samples, c, replace=False)
     C_init = X[indices] + np.random.normal(0, 0.1, (c, n_features))
     return C_init.flatten()
 
-# Objective function for SPSA - only optimize cluster centers
 def objective(theta):
-    # Reshape to cluster centers
+    """objective/loss function"""
+    # reshape to cluster centers
     C = np.reshape(theta, (c, n_features))
-    
-    # Compute membership matrix from current centers
-    W = compute_membership_matrix(X, C, m)
-    
-    # Compute distances
+    W = compute_membership_matrix(X, C, m) 
     distances = np.sqrt(((X[:, np.newaxis, :] - C[np.newaxis, :, :]) ** 2).sum(axis=2))
-    
-    # Compute fuzzy c-means objective
+    # compute soft kmeans objective
     loss = np.sum((W ** m) * (distances ** 2))
     
     return loss
-
-# # Run SPSA optimization with better parameters
-# theta_opt, x_history = spsa.minimize(
-#     objective,
-#     init_theta(),
-#     iterations=500,
-#     lr=0.1,           # Step size scaling 
-#     px=0.1,           # Perturbation scaling
-#     lr_decay=0.602,     # Step size decay
-#     px_decay=0.101,     # Perturbation decay
-# ) # A=50,            # Stability constant 
 
 if __name__ == "__main__":
     main()
