@@ -9,7 +9,8 @@ Gradient estimation is crucial for optimization in black-box scenarios where exp
 across three distinct problem domains:
 - Linear Regression
 - K-Means Clustering
-- Reinforcement Learning (Policy Optimization)
+- Reinforcement Learning
+- Architecture Optimization
 
 The study evaluates convergence speed, solution quality, and robustness under different noise conditions.
 
