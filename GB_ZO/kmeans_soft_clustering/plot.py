@@ -1,15 +1,21 @@
 import os
 import json
 import matplotlib.pyplot as plt
+import sys
+sys.path.insert(0, ".")
+from GB_ZO.utils import LABELS
+import numpy as np
 
-DIMENSION = 2
+DIMENSION = [2, 6][0]
 RESULTS_PATH = "GB_ZO/kmeans_soft_clustering/results"
 OUTPUT_PATH = f"GB_ZO/kmeans_soft_clustering/results/{DIMENSION}D.pdf"
+OUTPUT_TABLE = f"GB_ZO/kmeans_soft_clustering/results/table_{DIMENSION}D.tex"
 XLIM = {
-    6: (0, 800),
-    2: (0, 1200)
+    6: (-16, 1600),
+    2: (-18, 1800)
 }[DIMENSION]
-
+FIGSIZE = (9,3)
+LOG = True
 
 def main():
     results = load_results(RESULTS_PATH)
@@ -19,9 +25,16 @@ def main():
     # verifiying that results have the same parameters
     comparison_columns = ["n_samples", "n_features", "n_clusters"]
     for col in comparison_columns:
-        assert results["spsa"][col] == results["multi-point"][col]
+        assert results["spsa"][col] == results["multi-point"][col] == results["analytical"][col]
 
-    plot_loss_history(results["spsa"], results["multi-point"])
+    plot_loss_history(results["spsa"], results["multi-point"], results["analytical"])
+
+    table_results = {
+        "SPSA": prepare_table_dict(results["spsa"]["loss_history"]),
+        "multi-point": prepare_table_dict(results["multi-point"]["loss_history"]),
+        "analytical": prepare_table_dict(results["analytical"]["loss_history"])
+    }
+    generate_latex_table(table_results, OUTPUT_TABLE)
 
 def load_results(results_path):
 
@@ -35,27 +48,84 @@ def load_results(results_path):
     
     return results
 
-def plot_loss_history(res1, res2):
+def plot_loss_history(res1, res2, res3):
     """Plots the training loss over iterations."""
-    label1 = res1["method"]
-    label2 = res2["method"]
+    label1 = LABELS.get(res1["method"])
+    label2 = LABELS.get(res2["method"])
+    label3 = LABELS.get(res3["method"])
     loss_history1 = res1["loss_history"]
     loss_history2 = res2["loss_history"]
+    loss_history3 = res3["loss_history"]
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=FIGSIZE)
     plt.plot(loss_history1, label=label1)
     plt.plot(loss_history2, label=label2)
+    plt.plot(loss_history3, label=label3)
     plt.xlim(*XLIM)
     plt.xlabel('Iteration')
     plt.ylabel('Loss')
     title = f'Comparison Training Loss Over Iterations \n {res1["n_samples"]} samples, {res1["n_features"]}D points, {res1["n_clusters"]} clusters'
     if "sparse_dims" in res1:
         title += f', {res1["sparse_dims"]} sparse dimensions'
-    plt.title(title)
+    #plt.title(title)
     plt.legend()
     plt.grid(True)
+    if LOG:
+        plt.yscale("log")
+    plt.tight_layout()
     plt.savefig(OUTPUT_PATH)
     plt.show()
+
+def prepare_table_dict(results, last_n=10):
+    """
+    Takes 2 np arrays as inputs and outputs the mean of their last 10 elements
+    
+    Args:
+        results: numpy array of results
+        empirical_coverage: numpy array of empirical coverage values
+    
+    Returns:
+        dict: Dictionary with mean of last 10 elements for each input array
+    """
+    results_mean = np.mean(results[:XLIM[-1]][-last_n:])
+    
+    return {
+        'final_result': results_mean,
+    }
+
+
+def generate_latex_table(results, filename, round_digits=4):
+    latex_header = r"""\begin{table}[H]
+    \centering
+    \begin{tabular}{lc}
+    \toprule
+    \textbf{Algorithm} & \textbf{Loss} \\
+    \midrule
+    """
+
+    latex_footer = r"""\bottomrule
+    \end{tabular}
+    \caption{Algorithm performance: average of the last 10 iterations}
+    \end{table}"""
+
+    # Process each algorithm
+    rows = []
+    for algo, values in results.items():
+        # Format numerical values
+        final_val = round(values['final_result'], round_digits)
+    
+        # Escape special LaTeX characters in algorithm names
+        algo_escaped = LABELS[algo].replace('_', '\\_')
+        
+        rows.append(f"{algo_escaped} & ${final_val}$ \\\\")
+
+    # Combine all components
+    latex_content = latex_header + "\n".join(rows) + "\n" + latex_footer
+    
+    # Write to file
+    with open(filename, 'w') as f:
+        f.write(latex_content)
+
 
 if __name__ == "__main__":
     main()
